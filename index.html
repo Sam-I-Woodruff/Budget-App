@@ -8,14 +8,23 @@
 </head>
 <body>
   <h1>Budget Tracker</h1>
-  <form id="expense-form">
-    <input type="text" id="desc" placeholder="Description" required />
-    <input type="number" id="amount" placeholder="Amount" required />
-    <button type="submit">Add</button>
+
+  <h2>Add Category</h2>
+  <form id="category-form">
+    <input type="text" id="cat-name" placeholder="Category Name" required />
+    <input type="number" id="cat-budget" placeholder="Budget Amount" required />
+    <button type="submit">Add Category</button>
   </form>
 
-  <ul id="expense-list"></ul>
-  <h2>Total: $<span id="total">0</span></h2>
+  <h2>Add Expense</h2>
+  <form id="expense-form">
+    <select id="expense-category" required></select>
+    <input type="text" id="expense-desc" placeholder="Description" required />
+    <input type="number" id="expense-amount" placeholder="Amount" required />
+    <button type="submit">Add Expense</button>
+  </form>
+
+  <div id="categories"></div>
 
   <script src="app.js"></script>
 </body>

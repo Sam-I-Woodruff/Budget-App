@@ -1,13 +1,19 @@
-body {
-    font-family: sans-serif;
-    padding: 20px;
-    max-width: 500px;
-    margin: auto;
-  }
-  input, button {
-    width: 100%;
-    margin: 5px 0;
-    padding: 10px;
-    box-sizing: border-box;
-  }
-  
+.bar-container {
+  background-color: #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+  height: 20px;
+}
+.bar {
+  height: 100%;
+  background-color: #4caf50;
+  width: 0%;
+}
+.category {
+  margin-bottom: 20px;
+}
+button {
+  margin-left: 5px;
+  cursor: pointer;
+}
