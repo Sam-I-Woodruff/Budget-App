@@ -1,0 +1,248 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+  background: #f6f5fa;
+  color: #333;
+}
+
+header {
+  background: #a18aff;
+  color: #fff;
+  padding: 2rem 0 1rem 0;
+  text-align: center;
+  border-bottom-left-radius: 2rem;
+  border-bottom-right-radius: 2rem;
+  box-shadow: 0 2px 8px rgba(161, 138, 255, 0.1);
+}
+
+h1 {
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  margin: 0;
+}
+
+main {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 2rem auto;
+  max-width: 900px;
+}
+
+section {
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 16px rgba(161, 138, 255, 0.08);
+  padding: 2rem 1.5rem;
+  min-width: 320px;
+  flex: 1;
+}
+
+h2 {
+  color: #a18aff;
+  margin-top: 0;
+}
+
+button {
+  background: #a18aff;
+  color: #fff;
+  border: none;
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(161, 138, 255, 0.12);
+  transition: background 0.2s, transform 0.2s;
+}
+
+button:hover {
+  background: #7c5fff;
+  transform: translateY(-2px) scale(1.04);
+}
+
+#categories-list, #transactions-list {
+  margin-top: 1rem;
+  min-height: 60px;
+} 
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(161, 138, 255, 0.18);
+  z-index: 1000;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 2rem;
+  box-shadow: 0 8px 32px rgba(161, 138, 255, 0.18);
+  z-index: 1001;
+  min-width: 320px;
+  max-width: 90vw;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-content h3 {
+  color: #a18aff;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.modal-content label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #7c5fff;
+  font-weight: 500;
+}
+
+/* Modal input width fix */
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content input[type="date"],
+.modal-content select {
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+}
+
+.modal-content input:focus {
+  border-color: #a18aff;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.modal-actions button {
+  min-width: 90px;
+} 
+
+/* Category progress bar */
+.category-progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 6px;
+  background: #e0d7ff;
+  margin: 8px 0 0 0;
+  overflow: hidden;
+}
+.category-progress-inner {
+  height: 100%;
+  border-radius: 6px;
+  background: #4be18a;
+  transition: width 0.4s, background 0.3s;
+}
+.category-progress.over {
+  background: #ffe0c2;
+}
+.category-progress-inner.over {
+  background: #ff7a2f;
+} 
+
+/* Edit transaction pencil icon */
+.edit-transaction-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  vertical-align: middle;
+  outline: none;
+}
+.edit-transaction-btn svg {
+  fill: #a18aff;
+  transition: fill 0.2s;
+}
+.edit-transaction-btn:hover svg {
+  fill: #7c5fff;
+}
+
+/* Delete modal and trash can */
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  padding: 0;
+}
+.delete-btn svg {
+  fill: #ff7a2f;
+  transition: fill 0.2s;
+}
+.delete-btn:hover svg {
+  fill: #d65a00;
+}
+
+#delete-modal .modal-content {
+  min-width: 300px;
+  max-width: 420px;
+}
+.delete-tab {
+  background: #e0d7ff;
+  color: #7c5fff;
+  border: none;
+  border-radius: 1.2rem 1.2rem 0 0;
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: -2px;
+  transition: background 0.2s, color 0.2s;
+}
+.delete-tab.active {
+  background: #a18aff;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(161, 138, 255, 0.12);
+}
+#delete-categories-list, #delete-transactions-list {
+  margin-top: 1rem;
+  min-height: 60px;
+} 
+
+/* Delete item button in modal */
+.delete-item-btn {
+  background: #ff7a2f;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  outline: none;
+}
+.delete-item-btn svg {
+  fill: #fff;
+  width: 16px;
+  height: 16px;
+}
+.delete-item-btn:hover {
+  background: #d65a00;
+}
+
+.delete-modal-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f0eaff;
+} 

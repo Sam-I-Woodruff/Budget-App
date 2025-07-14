@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Budget App - Purple</title>
+  <link rel="stylesheet" href="style_purple.css">
+</head>
+<body>
+  <header>
+    <h1>Budget Buddy (Purple)</h1>
+  </header>
+  <main>
+    <section id="categories-section">
+      <h2>Categories</h2>
+      <div id="categories-list"></div>
+      <button id="add-category-btn">Add Category</button>
+    </section>
+    <section id="transactions-section">
+      <h2>Transactions</h2>
+      <div id="transactions-list"></div>
+      <button id="add-transaction-btn">Add Transaction</button>
+    </section>
+  </main>
+  <!-- Add Category Modal -->
+  <div id="modal-overlay" class="modal-overlay" style="display:none;"></div>
+  <div id="add-category-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>Add Category</h3>
+      <form id="add-category-form">
+        <label for="category-name">Category Name</label>
+        <input type="text" id="category-name" name="category-name" required>
+        <label for="category-limit">Limit ($)</label>
+        <input type="number" id="category-limit" name="category-limit" min="0" step="0.01" required>
+        <div class="modal-actions">
+          <button type="submit">Save</button>
+          <button type="button" id="cancel-modal-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Add Transaction Modal -->
+  <div id="transaction-modal-overlay" class="modal-overlay" style="display:none;"></div>
+  <div id="add-transaction-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h3>Add Transaction</h3>
+      <form id="add-transaction-form">
+        <label for="transaction-amount">Amount ($)</label>
+        <input type="number" id="transaction-amount" name="transaction-amount" min="0.01" step="0.01" required>
+        <label for="transaction-date">Date</label>
+        <input type="date" id="transaction-date" name="transaction-date" required>
+        <label for="transaction-category">Category</label>
+        <select id="transaction-category" name="transaction-category" required></select>
+        <div class="modal-actions">
+          <button type="submit">Save</button>
+          <button type="button" id="cancel-transaction-modal-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Delete Modal and Button -->
+  <button id="open-delete-modal-btn" class="delete-btn" title="Delete" style="position: fixed; top: 24px; right: 32px; z-index: 1100; background: none; border: none; cursor: pointer;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#ff7a2f" viewBox="0 0 16 16">
+      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6zm-7-2A1.5 1.5 0 0 1 5.5 3h5A1.5 1.5 0 0 1 12 4.5V5h3.5a.5.5 0 0 1 0 1h-1.027l-.427 9.447A2 2 0 0 1 12.05 17H3.95a2 2 0 0 1-1.996-1.553L1.527 6H.5a.5.5 0 0 1 0-1H4v-.5zM5.5 4a.5.5 0 0 0-.5.5V5h6v-.5a.5.5 0 0 0-.5-.5h-5zM2.522 6l.427 9.447A1 1 0 0 0 3.95 16h8.1a1 1 0 0 0 .999-.553L13.478 6H2.522z"/>
+    </svg>
+  </button>
+  <div id="delete-modal-overlay" class="modal-overlay" style="display:none;"></div>
+  <div id="delete-modal" class="modal" style="display:none; min-width: 340px; max-width: 96vw;">
+    <div class="modal-content">
+      <div style="display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1.2rem;">
+        <button id="delete-tab-categories" class="delete-tab active" type="button">Categories</button>
+        <button id="delete-tab-transactions" class="delete-tab" type="button">Transactions</button>
+      </div>
+      <div id="delete-categories-list" style="display: block;"></div>
+      <div id="delete-transactions-list" style="display: none;"></div>
+    </div>
+  </div>
+  <script src="app_purple.js"></script>
+</body>
+</html> 
