@@ -259,6 +259,68 @@ function showDeleteTab(tab) {
   }
 }
 
+// Confirmation modal logic
+let pendingDelete = null;
+
+// Add confirmation modal to DOM if not present
+if (!document.getElementById('confirm-delete-modal')) {
+  const confirmModal = document.createElement('div');
+  confirmModal.id = 'confirm-delete-modal';
+  confirmModal.className = 'modal';
+  confirmModal.style.display = 'none';
+  confirmModal.innerHTML = `
+    <div class="modal-content" style="min-width: 260px; max-width: 96vw; text-align: center;">
+      <h3 style="color: #ff7a2f;">Are you sure you want to delete?</h3>
+      <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1.5rem;">
+        <button id="cancel-delete-btn" style="background: #e0d7ff; color: #7c5fff;">Cancel</button>
+        <button id="final-delete-btn" style="background: #ff7a2f; color: #fff;">Final Delete</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(confirmModal);
+}
+const confirmDeleteModal = document.getElementById('confirm-delete-modal');
+const cancelDeleteBtn = confirmDeleteModal.querySelector('#cancel-delete-btn');
+const finalDeleteBtn = confirmDeleteModal.querySelector('#final-delete-btn');
+
+function openConfirmDeleteModal(type, idx) {
+  confirmDeleteModal.style.display = 'block';
+  pendingDelete = { type, idx };
+}
+function closeConfirmDeleteModal() {
+  confirmDeleteModal.style.display = 'none';
+  pendingDelete = null;
+}
+cancelDeleteBtn.addEventListener('click', closeConfirmDeleteModal);
+confirmDeleteModal.addEventListener('click', (e) => {
+  if (e.target === confirmDeleteModal) closeConfirmDeleteModal();
+});
+finalDeleteBtn.addEventListener('click', () => {
+  if (!pendingDelete) return;
+  if (pendingDelete.type === 'category') {
+    // Remove all transactions in this category
+    const cat = categories[pendingDelete.idx];
+    for (let i = transactions.length - 1; i >= 0; i--) {
+      if (transactions[i].category === cat.name) {
+        transactions.splice(i, 1);
+      }
+    }
+    categories.splice(pendingDelete.idx, 1);
+    renderCategories();
+    renderTransactions();
+    renderDeleteCategories();
+  } else if (pendingDelete.type === 'transaction') {
+    const tx = transactions[pendingDelete.idx];
+    const cat = categories.find(c => c.name === tx.category);
+    if (cat) cat.spent -= tx.amount;
+    transactions.splice(pendingDelete.idx, 1);
+    renderCategories();
+    renderTransactions();
+    renderDeleteTransactions();
+  }
+  closeConfirmDeleteModal();
+});
+
 function renderDeleteCategories() {
   deleteCategoriesList.innerHTML = '';
   categories.forEach((cat, idx) => {
@@ -266,21 +328,10 @@ function renderDeleteCategories() {
     row.className = 'delete-modal-list-row';
     row.innerHTML = `
       <span>${cat.name}</span>
-      <button class="delete-item-btn" title="Delete Category" data-idx="${idx}">
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6zm-7-2A1.5 1.5 0 0 1 5.5 3h5A1.5 1.5 0 0 1 12 4.5V5h3.5a.5.5 0 0 1 0 1h-1.027l-.427 9.447A2 2 0 0 1 12.05 17H3.95a2 2 0 0 1-1.996-1.553L1.527 6H.5a.5.5 0 0 1 0-1H4v-.5zM5.5 4a.5.5 0 0 0-.5.5V5h6v-.5a.5.5 0 0 0-.5-.5h-5zM2.522 6l.427 9.447A1 1 0 0 0 3.95 16h8.1a1 1 0 0 0 .999-.553L13.478 6H2.522z'/></svg>
-      </button>
+      <button class="delete-item-btn" title="Delete Category" data-idx="${idx}">Delete</button>
     `;
     row.querySelector('.delete-item-btn').addEventListener('click', () => {
-      // Remove all transactions in this category
-      for (let i = transactions.length - 1; i >= 0; i--) {
-        if (transactions[i].category === cat.name) {
-          transactions.splice(i, 1);
-        }
-      }
-      categories.splice(idx, 1);
-      renderCategories();
-      renderTransactions();
-      renderDeleteCategories();
+      openConfirmDeleteModal('category', idx);
     });
     deleteCategoriesList.appendChild(row);
   });
@@ -293,18 +344,10 @@ function renderDeleteTransactions() {
     row.className = 'delete-modal-list-row';
     row.innerHTML = `
       <span>${tx.date} - ${tx.category}: $${tx.amount.toFixed(2)}</span>
-      <button class="delete-item-btn" title="Delete Transaction" data-idx="${idx}">
-        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6zm-7-2A1.5 1.5 0 0 1 5.5 3h5A1.5 1.5 0 0 1 12 4.5V5h3.5a.5.5 0 0 1 0 1h-1.027l-.427 9.447A2 2 0 0 1 12.05 17H3.95a2 2 0 0 1-1.996-1.553L1.527 6H.5a.5.5 0 0 1 0-1H4v-.5zM5.5 4a.5.5 0 0 0-.5.5V5h6v-.5a.5.5 0 0 0-.5-.5h-5zM2.522 6l.427 9.447A1 1 0 0 0 3.95 16h8.1a1 1 0 0 0 .999-.553L13.478 6H2.522z'/></svg>
-      </button>
+      <button class="delete-item-btn" title="Delete Transaction" data-idx="${idx}">Delete</button>
     `;
     row.querySelector('.delete-item-btn').addEventListener('click', () => {
-      // Update spent for the category
-      const cat = categories.find(c => c.name === tx.category);
-      if (cat) cat.spent -= tx.amount;
-      transactions.splice(idx, 1);
-      renderCategories();
-      renderTransactions();
-      renderDeleteTransactions();
+      openConfirmDeleteModal('transaction', idx);
     });
     deleteTransactionsList.appendChild(row);
   });

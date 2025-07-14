@@ -217,26 +217,20 @@ button:hover {
 
 /* Delete item button in modal */
 .delete-item-btn {
-  background: #ff7a2f;
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 1rem;
+  color: #ff7a2f;
+  font-weight: bold;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s;
-  outline: none;
-}
-.delete-item-btn svg {
-  fill: #fff;
-  width: 16px;
-  height: 16px;
+  margin-left: 1rem;
+  padding: 0.2rem 0.8rem;
+  border-radius: 0.8rem;
+  transition: color 0.2s, background 0.2s;
 }
 .delete-item-btn:hover {
-  background: #d65a00;
+  color: #d65a00;
+  background: #fff3e6;
 }
 
 .delete-modal-list-row {
