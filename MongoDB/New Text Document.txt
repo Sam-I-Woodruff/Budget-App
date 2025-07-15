@@ -1,4 +1,0 @@
-npm install mongodb
-
-
-mongodb+srv://samwoodruff275:<db_password>@budget-cluster.iltbzjs.mongodb.net/?retryWrites=true&w=majority&appName=budget-cluster
