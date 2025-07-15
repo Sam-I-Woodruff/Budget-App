@@ -6,6 +6,7 @@
 // const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SUPABASE_URL = 'https://tlgqcodxmbmzxyuhgfug.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRsZ3Fjb2R4bWJtenh5dWhnZnVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1OTY0NzYsImV4cCI6MjA2ODE3MjQ3Nn0.uPDg84LT6bLOrqEKE7to7wY1tURaIUjLl3aCo6bgUjU';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Auth UI elements
 const authSection = document.getElementById('auth-section');
@@ -15,31 +16,96 @@ const logoutBtn = document.getElementById('logout-btn');
 const authForms = document.getElementById('auth-forms');
 const authLoggedIn = document.getElementById('auth-logged-in');
 const userEmailSpan = document.getElementById('user-email');
+const toggleAuthFormLink = document.getElementById('toggle-auth-form');
+
+// Track which form is active
+let showingLogin = true;
+
+function showLoginForm() {
+  loginForm.style.display = '';
+  signupForm.style.display = 'none';
+  toggleAuthFormLink.textContent = "Don't have an account? Sign up";
+  showingLogin = true;
+  loginForm.reset();
+}
+function showSignupForm() {
+  loginForm.style.display = 'none';
+  signupForm.style.display = '';
+  toggleAuthFormLink.textContent = 'Already have an account? Log in';
+  showingLogin = false;
+  signupForm.reset();
+}
+
+toggleAuthFormLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (showingLogin) {
+    showSignupForm();
+  } else {
+    showLoginForm();
+  }
+});
 
 // Main app UI
 const main = document.querySelector('main');
 
+// Modal elements for login/signup
+const openLoginModalBtn = document.getElementById('open-login-modal-btn');
+const loginModalOverlay = document.getElementById('login-modal-overlay');
+const loginModal = document.getElementById('login-modal');
+
+// Show/hide login modal
+function showLoginModal() {
+  loginModalOverlay.style.display = 'block';
+  loginModal.style.display = 'block';
+  showLoginForm();
+}
+function hideLoginModal() {
+  loginModalOverlay.style.display = 'none';
+  loginModal.style.display = 'none';
+}
+
+// Helper: Get current user from Supabase session
+function getCurrentUser() {
+  const session = supabaseClient.auth.getSession ? supabaseClient.auth.getSession() : null;
+  if (session && session.user) return session.user;
+  // Fallback for older SDKs
+  return supabaseClient.auth.user ? supabaseClient.auth.user() : null;
+}
+
 // Helper: Show/hide UI based on auth
 function updateAuthUI(user) {
   if (user) {
-    authForms.style.display = 'none';
+    openLoginModalBtn.style.display = 'none';
     authLoggedIn.style.display = 'block';
     userEmailSpan.textContent = user.email;
     main.style.display = '';
+    hideLoginModal();
+    console.log('Logged in: hiding login modal and button');
   } else {
-    authForms.style.display = 'block';
-    authLoggedIn.style.display = 'none';
-    userEmailSpan.textContent = '';
-    main.style.display = 'none';
+    if (openLoginModalBtn) openLoginModalBtn.style.display = '';
+    if (authLoggedIn) authLoggedIn.style.display = 'none';
+    if (userEmailSpan) userEmailSpan.textContent = '';
+    if (main) main.style.display = 'none';
+    // Force modal/button to show
+    if (loginModal) {
+      loginModalOverlay.style.display = 'block';
+      loginModal.style.display = 'block';
+      showLoginForm();
+      console.log('Not logged in: forcibly showing login modal and button');
+    }
+    if (openLoginModalBtn) openLoginModalBtn.style.display = '';
+    console.log('Modal display:', loginModal ? loginModal.style.display : 'no modal');
+    console.log('Button display:', openLoginModalBtn ? openLoginModalBtn.style.display : 'no button');
   }
 }
 
 // Listen for auth state changes
-supabase.auth.onAuthStateChange((_event, session) => {
-  updateAuthUI(session?.user);
-  if (session?.user) {
-    loadCategories();
-    loadTransactions();
+supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+  const user = session?.user || null;
+  updateAuthUI(user);
+  if (user) {
+    await loadCategories();
+    await loadTransactions();
   }
 });
 
@@ -48,8 +114,18 @@ loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) alert(error.message);
+  loginForm.querySelector('button[type="submit"]').disabled = true;
+  try {
+    const { error, data } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      alert(error.message);
+    } else {
+      alert('Logged in successfully!');
+      updateAuthUI(data.user);
+    }
+  } finally {
+    loginForm.querySelector('button[type="submit"]').disabled = false;
+  }
 });
 
 // Signup
@@ -57,21 +133,45 @@ signupForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('signup-email').value;
   const password = document.getElementById('signup-password').value;
-  const { error } = await supabase.auth.signUp({ email, password });
-  if (error) alert(error.message);
-  else alert('Check your email for confirmation!');
+  signupForm.querySelector('button[type="submit"]').disabled = true;
+  try {
+    const { error, data } = await supabaseClient.auth.signUp({ email, password });
+    if (error) {
+      alert(error.message);
+    } else {
+      alert('Signup successful! Please check your email to confirm your account before logging in.');
+      document.getElementById('login-email').value = email;
+      document.getElementById('login-password').value = password;
+      signupForm.reset();
+      hideLoginModal();
+    }
+  } finally {
+    signupForm.querySelector('button[type="submit"]').disabled = false;
+  }
 });
 
 // Logout
 logoutBtn.addEventListener('click', async () => {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
+  updateAuthUI(null);
 });
+
+// On page load, check for existing session and update UI
+(async function() {
+  console.log('On page load: loginModal', loginModal, 'openLoginModalBtn', openLoginModalBtn);
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  updateAuthUI(session?.user || null);
+  if (session?.user) {
+    await loadCategories();
+    await loadTransactions();
+  }
+})();
 
 // CRUD for categories
 async function loadCategories() {
-  const user = supabase.auth.user();
+  const user = supabaseClient.auth.user();
   if (!user) return;
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('categories')
     .select('*')
     .eq('user_id', user.id);
@@ -84,9 +184,9 @@ async function loadCategories() {
 }
 
 async function addCategorySupabase(name, limits) {
-  const user = supabase.auth.user();
+  const user = supabaseClient.auth.user();
   if (!user) return;
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('categories')
     .insert([{ name, limits, spent: 0, user_id: user.id }]);
   if (error) alert(error.message);
@@ -94,7 +194,7 @@ async function addCategorySupabase(name, limits) {
 }
 
 async function updateCategorySupabase(id, name, limits) {
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('categories')
     .update({ name, limits })
     .eq('id', id);
@@ -103,7 +203,7 @@ async function updateCategorySupabase(id, name, limits) {
 }
 
 async function deleteCategorySupabase(id) {
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('categories')
     .delete()
     .eq('id', id);
@@ -113,9 +213,9 @@ async function deleteCategorySupabase(id) {
 
 // CRUD for transactions
 async function loadTransactions() {
-  const user = supabase.auth.user();
+  const user = supabaseClient.auth.user();
   if (!user) return;
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('transactions')
     .select('*')
     .eq('user_id', user.id);
@@ -128,9 +228,9 @@ async function loadTransactions() {
 }
 
 async function addTransactionSupabase(amount, date, category_id) {
-  const user = supabase.auth.user();
+  const user = supabaseClient.auth.user();
   if (!user) return;
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('transactions')
     .insert([{ amount, date, category_id, user_id: user.id }]);
   if (error) alert(error.message);
@@ -138,7 +238,7 @@ async function addTransactionSupabase(amount, date, category_id) {
 }
 
 async function updateTransactionSupabase(id, amount, date, category_id) {
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('transactions')
     .update({ amount, date, category_id })
     .eq('id', id);
@@ -147,7 +247,7 @@ async function updateTransactionSupabase(id, amount, date, category_id) {
 }
 
 async function deleteTransactionSupabase(id) {
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('transactions')
     .delete()
     .eq('id', id);
@@ -264,7 +364,7 @@ function renderTransactionsSupabase(transactions) {
 function openModalSupabase(editId = null) {
   // Fetch category if editing
   if (editId) {
-    supabase.from('categories').select('*').eq('id', editId).single().then(({ data, error }) => {
+    supabaseClient.from('categories').select('*').eq('id', editId).single().then(({ data, error }) => {
       if (error) return alert(error.message);
       document.getElementById('category-name').value = data.name;
       document.getElementById('category-limit').value = data.limits;
@@ -316,7 +416,7 @@ function closeModal() {
 function openTransactionModalSupabase(editId = null) {
   populateCategoryDropdownSupabase().then(() => {
     if (editId) {
-      supabase.from('transactions').select('*').eq('id', editId).single().then(({ data, error }) => {
+      supabaseClient.from('transactions').select('*').eq('id', editId).single().then(({ data, error }) => {
         if (error) return alert(error.message);
         document.getElementById('transaction-amount').value = data.amount;
         document.getElementById('transaction-date').value = data.date;
@@ -369,9 +469,9 @@ function closeTransactionModal() {
 
 // Populate category dropdown from Supabase
 async function populateCategoryDropdownSupabase() {
-  const user = supabase.auth.user();
+  const user = supabaseClient.auth.user();
   if (!user) return;
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('categories')
     .select('id, name')
     .eq('user_id', user.id);
@@ -472,9 +572,9 @@ finalDeleteBtn.addEventListener('click', () => {
     const cat = tx.querySelector('strong').textContent.split(' - ')[0];
     deleteTransactionSupabase(tx.querySelector('.edit-transaction-btn').getAttribute('data-id'));
     // Re-calculate spent for the category
-    supabase.from('categories').select('*').eq('name', cat).single().then(({ data }) => {
+    supabaseClient.from('categories').select('*').eq('name', cat).single().then(({ data }) => {
       if (data) {
-        supabase.from('categories').update({ spent: data.spent - tx.querySelector('span').textContent.split(' - ')[1].split(':')[0].split('$')[1] }).eq('name', cat);
+        supabaseClient.from('categories').update({ spent: data.spent - tx.querySelector('span').textContent.split(' - ')[1].split(':')[0].split('$')[1] }).eq('name', cat);
       }
     });
   }
