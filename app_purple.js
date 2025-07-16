@@ -66,10 +66,8 @@ function hideLoginModal() {
 
 // Helper: Get current user from Supabase session
 function getCurrentUser() {
-  const session = supabaseClient.auth.getSession ? supabaseClient.auth.getSession() : null;
-  if (session && session.user) return session.user;
-  // Fallback for older SDKs
-  return supabaseClient.auth.user ? supabaseClient.auth.user() : null;
+  // v2+ getUser usage
+  return supabaseClient.auth.getUser ? supabaseClient.auth.getUser() : null;
 }
 
 // Helper: Show/hide UI based on auth
@@ -169,7 +167,7 @@ logoutBtn.addEventListener('click', async () => {
 
 // CRUD for categories
 async function loadCategories() {
-  const user = supabaseClient.auth.user();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
   const { data, error } = await supabaseClient
     .from('categories')
@@ -184,13 +182,17 @@ async function loadCategories() {
 }
 
 async function addCategorySupabase(name, limits) {
-  const user = supabaseClient.auth.user();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
   const { error } = await supabaseClient
     .from('categories')
     .insert([{ name, limits, spent: 0, user_id: user.id }]);
-  if (error) alert(error.message);
-  else loadCategories();
+  if (error) {
+    alert(error.message);
+    console.log(error); // <-- Add this line
+  } else {
+    loadCategories();
+  }
 }
 
 async function updateCategorySupabase(id, name, limits) {
@@ -213,7 +215,7 @@ async function deleteCategorySupabase(id) {
 
 // CRUD for transactions
 async function loadTransactions() {
-  const user = supabaseClient.auth.user();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
   const { data, error } = await supabaseClient
     .from('transactions')
@@ -228,7 +230,7 @@ async function loadTransactions() {
 }
 
 async function addTransactionSupabase(amount, date, category_id) {
-  const user = supabaseClient.auth.user();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
   const { error } = await supabaseClient
     .from('transactions')
@@ -469,7 +471,7 @@ function closeTransactionModal() {
 
 // Populate category dropdown from Supabase
 async function populateCategoryDropdownSupabase() {
-  const user = supabaseClient.auth.user();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
   const { data, error } = await supabaseClient
     .from('categories')
