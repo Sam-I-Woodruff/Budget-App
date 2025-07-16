@@ -11,6 +11,14 @@
   <header>
     <button id="open-login-modal-btn" style="position: absolute; left: 32px; top: 32px; z-index: 1100; display: none; background: #a18aff; color: #fff; border: none; border-radius: 1.2rem; padding: 0.5rem 1.2rem; font-size: 1rem; font-weight: bold; cursor: pointer;">Login</button>
     <h1>Budget Buddy (Purple)</h1>
+    <div id="user-dropdown-container" style="position: absolute; top: 32px; left: 32px; z-index: 1200; display: none;">
+      <div id="user-email-dropdown" class="user-email-dropdown">
+        <span id="user-email"></span>
+        <div id="logout-dropdown" class="logout-dropdown">
+          <button id="logout-btn">Logout</button>
+        </div>
+      </div>
+    </div>
   </header>
   <main>
     <section id="categories-section">
@@ -99,10 +107,6 @@
         </div>
       </div>
     </div>
-  </div>
-  <div id="auth-logged-in" style="display:none; text-align: center; margin-top: 1rem;">
-    <span id="user-email"></span>
-    <button id="logout-btn">Logout</button>
   </div>
   <script src="app_purple.js"></script>
 </body>

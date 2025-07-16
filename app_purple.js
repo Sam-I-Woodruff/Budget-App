@@ -14,8 +14,10 @@ const loginForm = document.getElementById('login-form');
 const signupForm = document.getElementById('signup-form');
 const logoutBtn = document.getElementById('logout-btn');
 const authForms = document.getElementById('auth-forms');
-const authLoggedIn = document.getElementById('auth-logged-in');
+const userDropdownContainer = document.getElementById('user-dropdown-container');
 const userEmailSpan = document.getElementById('user-email');
+const userEmailDropdown = document.getElementById('user-email-dropdown');
+const logoutDropdown = document.getElementById('logout-dropdown');
 const toggleAuthFormLink = document.getElementById('toggle-auth-form');
 
 // Track which form is active
@@ -74,14 +76,14 @@ function getCurrentUser() {
 function updateAuthUI(user) {
   if (user) {
     openLoginModalBtn.style.display = 'none';
-    authLoggedIn.style.display = 'block';
-    userEmailSpan.textContent = user.email;
+    if (userDropdownContainer) userDropdownContainer.style.display = 'block';
+    if (userEmailSpan) userEmailSpan.textContent = user.email;
     main.style.display = '';
     hideLoginModal();
-    console.log('Logged in: hiding login modal and button');
+    console.log('Logged in: hiding login modal and button, showing user email in header');
   } else {
     if (openLoginModalBtn) openLoginModalBtn.style.display = '';
-    if (authLoggedIn) authLoggedIn.style.display = 'none';
+    if (userDropdownContainer) userDropdownContainer.style.display = 'none';
     if (userEmailSpan) userEmailSpan.textContent = '';
     if (main) main.style.display = 'none';
     // Force modal/button to show

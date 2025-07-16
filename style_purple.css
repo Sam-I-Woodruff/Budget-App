@@ -240,3 +240,61 @@ button:hover {
   padding: 0.4rem 0;
   border-bottom: 1px solid #f0eaff;
 } 
+
+/* User email dropdown in header */
+#user-dropdown-container {
+  position: absolute;
+  left: 32px;
+  top: 32px;
+  z-index: 1200;
+  display: none;
+}
+.user-email-dropdown {
+  position: relative;
+  display: inline-block;
+  color: #fff;
+  font-weight: 500;
+  font-size: 1.08rem;
+  cursor: pointer;
+  padding: 0.2rem 1.1rem 0.2rem 0.7rem;
+  border-radius: 1.2rem;
+  background: rgba(124, 95, 255, 0.18);
+  transition: background 0.2s;
+}
+.user-email-dropdown:hover {
+  background: rgba(124, 95, 255, 0.32);
+}
+.logout-dropdown {
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: -2px;
+  min-width: 120px;
+  background: #fff;
+  border: 1.5px solid #a18aff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(161, 138, 255, 0.13);
+  padding: 0.5rem 0.7rem;
+  z-index: 1300;
+  text-align: left;
+}
+.user-email-dropdown:hover .logout-dropdown {
+  display: block;
+}
+.logout-dropdown button {
+  background: #a18aff;
+  color: #fff;
+  border: none;
+  border-radius: 1rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  margin: 0;
+  box-shadow: none;
+}
+.logout-dropdown button:hover {
+  background: #7c5fff;
+} 
