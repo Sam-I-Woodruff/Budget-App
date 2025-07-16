@@ -182,15 +182,21 @@ async function loadCategories() {
 }
 
 async function addCategorySupabase(name, limits) {
+  console.log('[DEBUG] addCategorySupabase called', { name, limits });
   const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return;
+  if (!user) {
+    console.log('[DEBUG] No user found in addCategorySupabase');
+    return;
+  }
+  console.log('[DEBUG] Inserting into Supabase categories', { name, limits, user_id: user.id });
   const { error } = await supabaseClient
     .from('categories')
     .insert([{ name, limits, spent: 0, user_id: user.id }]);
   if (error) {
     alert(error.message);
-    console.log(error); // <-- Add this line
+    console.log('[DEBUG] Supabase insert error', error); // <-- Add this line
   } else {
+    console.log('[DEBUG] Supabase insert success');
     loadCategories();
   }
 }
@@ -364,8 +370,8 @@ function renderTransactionsSupabase(transactions) {
 
 // Modal logic for Supabase CRUD
 function openModalSupabase(editId = null) {
-  // Fetch category if editing
   if (editId) {
+    console.log('[DEBUG] Opening category modal in EDIT mode for id:', editId);
     supabaseClient.from('categories').select('*').eq('id', editId).single().then(({ data, error }) => {
       if (error) return alert(error.message);
       document.getElementById('category-name').value = data.name;
@@ -375,18 +381,24 @@ function openModalSupabase(editId = null) {
       addCategoryModal.setAttribute('data-edit-id', editId);
       modalOverlay.style.display = 'block';
       addCategoryModal.style.display = 'block';
+      console.log('[DEBUG] Category modal opened in EDIT mode');
     });
   } else {
+    console.log('[DEBUG] Opening category modal in ADD mode');
     addCategoryForm.reset();
     addCategoryModal.querySelector('h3').textContent = 'Add Category';
     addCategoryForm.querySelector('button[type="submit"]').textContent = 'Save';
     addCategoryModal.removeAttribute('data-edit-id');
     modalOverlay.style.display = 'block';
     addCategoryModal.style.display = 'block';
+    console.log('[DEBUG] Category modal opened in ADD mode');
   }
 }
 
-addCategoryBtn.addEventListener('click', () => openModalSupabase());
+addCategoryBtn.addEventListener('click', () => {
+  console.log('[DEBUG] Add Category button clicked');
+  openModalSupabase();
+});
 cancelModalBtn.addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', closeModal);
 
@@ -395,13 +407,18 @@ addCategoryForm.addEventListener('submit', function(e) {
   const name = document.getElementById('category-name').value.trim();
   const limits = parseFloat(document.getElementById('category-limit').value);
   const editId = addCategoryModal.getAttribute('data-edit-id');
+  console.log('[DEBUG] Add Category form submitted', { name, limits, editId });
   if (name && !isNaN(limits)) {
     if (editId) {
+      console.log('[DEBUG] Calling updateCategorySupabase with', { editId, name, limits });
       updateCategorySupabase(editId, name, limits);
     } else {
+      console.log('[DEBUG] Calling addCategorySupabase with', { name, limits });
       addCategorySupabase(name, limits);
     }
     closeModal();
+  } else {
+    console.log('[DEBUG] Invalid form values', { name, limits });
   }
 });
 
@@ -412,6 +429,7 @@ function closeModal() {
   addCategoryModal.removeAttribute('data-edit-id');
   addCategoryModal.querySelector('h3').textContent = 'Add Category';
   addCategoryForm.querySelector('button[type="submit"]').textContent = 'Save';
+  console.log('[DEBUG] Category modal closed');
 }
 
 // Transaction modal logic for Supabase CRUD
