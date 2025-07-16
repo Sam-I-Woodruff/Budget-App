@@ -152,6 +152,14 @@ signupForm.addEventListener('submit', async (e) => {
 logoutBtn.addEventListener('click', async () => {
   await supabaseClient.auth.signOut();
   updateAuthUI(null);
+  // Show login modal after logout
+  if (loginModal && loginModalOverlay) {
+    loginModalOverlay.style.display = 'block';
+    loginModal.style.display = 'block';
+    showLoginForm(); // Ensure login form is visible
+  }
+  // Optionally, hide main app UI
+  if (main) main.style.display = 'none';
 });
 
 // On page load, check for existing session and update UI
