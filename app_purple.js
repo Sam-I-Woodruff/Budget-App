@@ -167,12 +167,14 @@ logoutBtn.addEventListener('click', async () => {
 
 // CRUD for categories
 async function loadCategories() {
+  console.log('[DEBUG] loadCategories called');
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
   const { data, error } = await supabaseClient
     .from('categories')
     .select('*')
     .eq('user_id', user.id);
+  console.log('[DEBUG] loadCategories result:', { data, error, userId: user.id });
   if (error) {
     alert(error.message);
     return;
@@ -189,15 +191,22 @@ async function addCategorySupabase(name, limits) {
     return;
   }
   console.log('[DEBUG] Inserting into Supabase categories', { name, limits, user_id: user.id });
-  const { error } = await supabaseClient
-    .from('categories')
-    .insert([{ name, limits, spent: 0, user_id: user.id }]);
-  if (error) {
-    alert(error.message);
-    console.log('[DEBUG] Supabase insert error', error); // <-- Add this line
-  } else {
-    console.log('[DEBUG] Supabase insert success');
-    loadCategories();
+  try {
+    const { error } = await supabaseClient
+      .from('categories')
+      .insert([{ name, limits, spent: 0, user_id: user.id }]);
+    console.log('[DEBUG] After insert, error:', error);
+    if (error) {
+      alert(error.message);
+      console.log('[DEBUG] Supabase insert error', error);
+    } else {
+      console.log('[DEBUG] Supabase insert success');
+      await loadCategories();
+      closeModal();
+    }
+  } catch (err) {
+    console.log('[DEBUG] Exception during Supabase insert', err);
+    alert('Unexpected error: ' + err.message);
   }
 }
 
@@ -299,6 +308,7 @@ let originalTransaction = null;
 
 // Render categories from Supabase data
 function renderCategoriesSupabase(categories) {
+  console.log('[DEBUG] renderCategoriesSupabase called with:', categories);
   categoriesList.innerHTML = '';
   categories.forEach((cat) => {
     const div = document.createElement('div');
