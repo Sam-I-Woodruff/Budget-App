@@ -656,8 +656,8 @@ function renderDeleteTransactions() {
 const yearSelect = document.getElementById('year-select');
 const monthSelect = document.getElementById('month-select');
 const periodSelectors = document.querySelector('.period-selectors');
-let selectedYear = new Date().getFullYear();
-let selectedMonth = new Date().getMonth() + 1; // JS months are 0-based
+let selectedYear = parseInt(localStorage.getItem('budget_selectedYear')) || new Date().getFullYear();
+let selectedMonth = parseInt(localStorage.getItem('budget_selectedMonth')) || (new Date().getMonth() + 1); // JS months are 0-based
 
 function populateYearMonthSelectors() {
   // Years: current year +/- 3 years
@@ -684,10 +684,12 @@ function populateYearMonthSelectors() {
 // Listen for changes
 yearSelect.addEventListener('change', () => {
   selectedYear = parseInt(yearSelect.value);
+  localStorage.setItem('budget_selectedYear', selectedYear);
   loadAndRenderAll();
 });
 monthSelect.addEventListener('change', () => {
   selectedMonth = parseInt(monthSelect.value);
+  localStorage.setItem('budget_selectedMonth', selectedMonth);
   loadAndRenderAll();
 });
 
