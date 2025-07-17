@@ -80,7 +80,6 @@ function updateAuthUI(user) {
     if (userEmailSpan) userEmailSpan.textContent = user.email;
     main.style.display = '';
     hideLoginModal();
-    console.log('Logged in: hiding login modal and button, showing user email in header');
   } else {
     if (openLoginModalBtn) openLoginModalBtn.style.display = '';
     if (userDropdownContainer) userDropdownContainer.style.display = 'none';
@@ -91,11 +90,8 @@ function updateAuthUI(user) {
       loginModalOverlay.style.display = 'block';
       loginModal.style.display = 'block';
       showLoginForm();
-      console.log('Not logged in: forcibly showing login modal and button');
     }
     if (openLoginModalBtn) openLoginModalBtn.style.display = '';
-    console.log('Modal display:', loginModal ? loginModal.style.display : 'no modal');
-    console.log('Button display:', openLoginModalBtn ? openLoginModalBtn.style.display : 'no button');
   }
 }
 
@@ -166,7 +162,6 @@ logoutBtn.addEventListener('click', async () => {
 
 // On page load, check for existing session and update UI
 (async function() {
-  console.log('On page load: loginModal', loginModal, 'openLoginModalBtn', openLoginModalBtn);
   const { data: { session } } = await supabaseClient.auth.getSession();
   updateAuthUI(session?.user || null);
   if (session?.user) {
@@ -177,45 +172,35 @@ logoutBtn.addEventListener('click', async () => {
 
 // CRUD for categories
 async function loadCategories() {
-  console.log('[DEBUG] loadCategories called');
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return;
   const { data, error } = await supabaseClient
     .from('categories')
     .select('*')
     .eq('user_id', user.id);
-  console.log('[DEBUG] loadCategories result:', { data, error, userId: user.id });
   if (error) {
     alert(error.message);
     return;
   }
-  // Render categories (implement renderCategoriesSupabase)
   renderCategoriesSupabase(data);
 }
 
 async function addCategorySupabase(name, limits) {
-  console.log('[DEBUG] addCategorySupabase called', { name, limits });
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
-    console.log('[DEBUG] No user found in addCategorySupabase');
     return;
   }
-  console.log('[DEBUG] Inserting into Supabase categories', { name, limits, user_id: user.id });
   try {
     const { error } = await supabaseClient
       .from('categories')
       .insert([{ name, limits, spent: 0, user_id: user.id }]);
-    console.log('[DEBUG] After insert, error:', error);
     if (error) {
       alert(error.message);
-      console.log('[DEBUG] Supabase insert error', error);
     } else {
-      console.log('[DEBUG] Supabase insert success');
       await loadCategories();
       closeModal();
     }
   } catch (err) {
-    console.log('[DEBUG] Exception during Supabase insert', err);
     alert('Unexpected error: ' + err.message);
   }
 }
@@ -250,7 +235,6 @@ async function loadTransactions() {
     alert(error.message);
     return;
   }
-  // Render transactions (implement renderTransactionsSupabase)
   renderTransactionsSupabase(data);
 }
 
@@ -318,7 +302,6 @@ let originalTransaction = null;
 
 // Render categories from Supabase data
 function renderCategoriesSupabase(categories) {
-  console.log('[DEBUG] renderCategoriesSupabase called with:', categories);
   categoriesList.innerHTML = '';
   categories.forEach((cat) => {
     const div = document.createElement('div');
@@ -347,7 +330,6 @@ function renderCategoriesSupabase(categories) {
     div.appendChild(progressBar);
     categoriesList.appendChild(div);
   });
-  // Add event listeners for edit/delete buttons
   document.querySelectorAll('.edit-category-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const id = btn.getAttribute('data-id');
@@ -373,7 +355,6 @@ function renderTransactionsSupabase(transactions) {
     div.innerHTML = `<span>${tx.date}</span> - <strong>${tx.category_id}</strong>: $${tx.amount.toFixed(2)} <button class="edit-transaction-btn" data-id="${tx.id}" title="Edit"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#a18aff' viewBox='0 0 16 16'><path d='M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zm.708-.708A1.5 1.5 0 0 0 12.146.146l-9.193 9.193a1.5 1.5 0 0 0-.329.494l-1.5 4a1.5 1.5 0 0 0 1.95 1.95l4-1.5a1.5 1.5 0 0 0 .494-.329l9.193-9.193a1.5 1.5 0 0 0 0-2.121l-2.292-2.292z'/></svg></button> <button class="delete-transaction-btn" data-id="${tx.id}" title="Delete">Delete</button>`;
     transactionsList.appendChild(div);
   });
-  // Add event listeners for edit/delete buttons
   document.querySelectorAll('.edit-transaction-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const id = btn.getAttribute('data-id');
@@ -391,7 +372,6 @@ function renderTransactionsSupabase(transactions) {
 // Modal logic for Supabase CRUD
 function openModalSupabase(editId = null) {
   if (editId) {
-    console.log('[DEBUG] Opening category modal in EDIT mode for id:', editId);
     supabaseClient.from('categories').select('*').eq('id', editId).single().then(({ data, error }) => {
       if (error) return alert(error.message);
       document.getElementById('category-name').value = data.name;
@@ -401,22 +381,18 @@ function openModalSupabase(editId = null) {
       addCategoryModal.setAttribute('data-edit-id', editId);
       modalOverlay.style.display = 'block';
       addCategoryModal.style.display = 'block';
-      console.log('[DEBUG] Category modal opened in EDIT mode');
     });
   } else {
-    console.log('[DEBUG] Opening category modal in ADD mode');
     addCategoryForm.reset();
     addCategoryModal.querySelector('h3').textContent = 'Add Category';
     addCategoryForm.querySelector('button[type="submit"]').textContent = 'Save';
     addCategoryModal.removeAttribute('data-edit-id');
     modalOverlay.style.display = 'block';
     addCategoryModal.style.display = 'block';
-    console.log('[DEBUG] Category modal opened in ADD mode');
   }
 }
 
 addCategoryBtn.addEventListener('click', () => {
-  console.log('[DEBUG] Add Category button clicked');
   openModalSupabase();
 });
 cancelModalBtn.addEventListener('click', closeModal);
@@ -427,18 +403,13 @@ addCategoryForm.addEventListener('submit', function(e) {
   const name = document.getElementById('category-name').value.trim();
   const limits = parseFloat(document.getElementById('category-limit').value);
   const editId = addCategoryModal.getAttribute('data-edit-id');
-  console.log('[DEBUG] Add Category form submitted', { name, limits, editId });
   if (name && !isNaN(limits)) {
     if (editId) {
-      console.log('[DEBUG] Calling updateCategorySupabase with', { editId, name, limits });
       updateCategorySupabase(editId, name, limits);
     } else {
-      console.log('[DEBUG] Calling addCategorySupabase with', { name, limits });
       addCategorySupabase(name, limits);
     }
     closeModal();
-  } else {
-    console.log('[DEBUG] Invalid form values', { name, limits });
   }
 });
 
@@ -449,7 +420,6 @@ function closeModal() {
   addCategoryModal.removeAttribute('data-edit-id');
   addCategoryModal.querySelector('h3').textContent = 'Add Category';
   addCategoryForm.querySelector('button[type="submit"]').textContent = 'Save';
-  console.log('[DEBUG] Category modal closed');
 }
 
 // Transaction modal logic for Supabase CRUD
