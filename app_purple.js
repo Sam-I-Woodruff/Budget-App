@@ -79,12 +79,14 @@ function updateAuthUI(user) {
     if (userDropdownContainer) userDropdownContainer.style.display = 'block';
     if (userEmailSpan) userEmailSpan.textContent = user.email;
     main.style.display = '';
+    if (periodSelectors) periodSelectors.style.display = 'flex';
     hideLoginModal();
   } else {
     if (openLoginModalBtn) openLoginModalBtn.style.display = '';
     if (userDropdownContainer) userDropdownContainer.style.display = 'none';
     if (userEmailSpan) userEmailSpan.textContent = '';
     if (main) main.style.display = 'none';
+    if (periodSelectors) periodSelectors.style.display = 'none';
     // Force modal/button to show
     if (loginModal) {
       loginModalOverlay.style.display = 'block';
@@ -100,8 +102,7 @@ supabaseClient.auth.onAuthStateChange(async (_event, session) => {
   const user = session?.user || null;
   updateAuthUI(user);
   if (user) {
-    await loadCategories();
-    await loadTransactions();
+    await loadAndRenderAll();
   }
 });
 
@@ -165,8 +166,7 @@ logoutBtn.addEventListener('click', async () => {
   const { data: { session } } = await supabaseClient.auth.getSession();
   updateAuthUI(session?.user || null);
   if (session?.user) {
-    await loadCategories();
-    await loadTransactions();
+    await loadAndRenderAll();
   }
 })();
 
@@ -185,7 +185,7 @@ async function loadCategories() {
   renderCategoriesSupabase(data);
 }
 
-async function addCategorySupabase(name, limits) {
+async function addCategorySupabase(name, limits, year, month) {
   const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) {
     return;
@@ -193,11 +193,11 @@ async function addCategorySupabase(name, limits) {
   try {
     const { error } = await supabaseClient
       .from('categories')
-      .insert([{ name, limits, spent: 0, user_id: user.id }]);
+      .insert([{ name, limits, spent: 0, user_id: user.id, year, month }]);
     if (error) {
       alert(error.message);
     } else {
-      await loadCategories();
+      await loadAndRenderAll();
       closeModal();
     }
   } catch (err) {
@@ -211,7 +211,7 @@ async function updateCategorySupabase(id, name, limits) {
     .update({ name, limits })
     .eq('id', id);
   if (error) alert(error.message);
-  else loadCategories();
+  else loadAndRenderAll();
 }
 
 async function deleteCategorySupabase(id) {
@@ -220,7 +220,7 @@ async function deleteCategorySupabase(id) {
     .delete()
     .eq('id', id);
   if (error) alert(error.message);
-  else loadCategories();
+  else loadAndRenderAll();
 }
 
 // CRUD for transactions
@@ -245,7 +245,7 @@ async function addTransactionSupabase(amount, date, category_id) {
     .from('transactions')
     .insert([{ amount, date, category_id, user_id: user.id }]);
   if (error) alert(error.message);
-  else loadTransactions();
+  else loadAndRenderAll();
 }
 
 async function updateTransactionSupabase(id, amount, date, category_id) {
@@ -254,7 +254,7 @@ async function updateTransactionSupabase(id, amount, date, category_id) {
     .update({ amount, date, category_id })
     .eq('id', id);
   if (error) alert(error.message);
-  else loadTransactions();
+  else loadAndRenderAll();
 }
 
 async function deleteTransactionSupabase(id) {
@@ -263,7 +263,7 @@ async function deleteTransactionSupabase(id) {
     .delete()
     .eq('id', id);
   if (error) alert(error.message);
-  else loadTransactions();
+  else loadAndRenderAll();
 }
 
 // TODO: Replace all local array logic with calls to the above functions
@@ -301,26 +301,30 @@ let originalTransaction = null;
 // const transactions = [];
 
 // Render categories from Supabase data
-function renderCategoriesSupabase(categories) {
+function renderCategoriesSupabase(categories, transactions) {
   categoriesList.innerHTML = '';
   categories.forEach((cat) => {
-    const div = document.createElement('div');
-    div.className = 'category-item';
-    const left = cat.limits - cat.spent;
+    // Calculate spent for this category from transactions
+    const spent = transactions
+      ? transactions.filter(tx => tx.category_id === cat.id).reduce((sum, tx) => sum + tx.amount, 0)
+      : cat.spent;
+    const left = cat.limits - spent;
     const isOver = left < 0;
     const label = isOver ? 'over' : 'left';
     const displayAmount = Math.abs(left).toFixed(2);
+    const div = document.createElement('div');
+    div.className = 'category-item';
     div.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
-        <span><strong>${cat.name}</strong> - $${cat.spent.toFixed(2)} / $${cat.limits.toFixed(2)}</span>
+        <span><strong>${cat.name}</strong> - $${spent.toFixed(2)} / $${cat.limits.toFixed(2)}</span>
         <span style="color: ${isOver ? '#ff7a2f' : '#4be18a'}; font-weight: bold;">$${displayAmount} ${label}</span>
         <button class="edit-category-btn" data-id="${cat.id}" style="background: #e0d7ff; color: #7c5fff; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Edit</button>
         <button class="delete-category-btn" data-id="${cat.id}" style="background: #ffe0c2; color: #ff7a2f; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Delete</button>
       </div>
     `;
     // Progress bar
-    const percent = Math.min((cat.spent / cat.limits) * 100, 100);
-    const over = cat.spent > cat.limits;
+    const percent = Math.min((spent / cat.limits) * 100, 100);
+    const over = spent > cat.limits;
     const progressBar = document.createElement('div');
     progressBar.className = 'category-progress' + (over ? ' over' : '');
     const progressInner = document.createElement('div');
@@ -345,14 +349,20 @@ function renderCategoriesSupabase(categories) {
 }
 
 // Render transactions from Supabase data
-function renderTransactionsSupabase(transactions) {
+function renderTransactionsSupabase(transactions, categories) {
   transactionsList.innerHTML = '';
   // Sort by date descending
   const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
   sorted.forEach((tx) => {
+    // Find category name by id
+    let catName = tx.category_id;
+    if (categories && Array.isArray(categories)) {
+      const cat = categories.find(c => c.id === tx.category_id);
+      if (cat) catName = cat.name;
+    }
     const div = document.createElement('div');
     div.className = 'transaction-item';
-    div.innerHTML = `<span>${tx.date}</span> - <strong>${tx.category_id}</strong>: $${tx.amount.toFixed(2)} <button class="edit-transaction-btn" data-id="${tx.id}" title="Edit"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#a18aff' viewBox='0 0 16 16'><path d='M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zm.708-.708A1.5 1.5 0 0 0 12.146.146l-9.193 9.193a1.5 1.5 0 0 0-.329.494l-1.5 4a1.5 1.5 0 0 0 1.95 1.95l4-1.5a1.5 1.5 0 0 0 .494-.329l9.193-9.193a1.5 1.5 0 0 0 0-2.121l-2.292-2.292z'/></svg></button> <button class="delete-transaction-btn" data-id="${tx.id}" title="Delete">Delete</button>`;
+    div.innerHTML = `<span>${tx.date}</span> - <strong>${catName}</strong>: $${tx.amount.toFixed(2)} <button class="edit-transaction-btn" data-id="${tx.id}" title="Edit"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#a18aff' viewBox='0 0 16 16'><path d='M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zm.708-.708A1.5 1.5 0 0 0 12.146.146l-9.193 9.193a1.5 1.5 0 0 0-.329.494l-1.5 4a1.5 1.5 0 0 0 1.95 1.95l4-1.5a1.5 1.5 0 0 0 .494-.329l9.193-9.193a1.5 1.5 0 0 0 0-2.121l-2.292-2.292z'/></svg></button> <button class="delete-transaction-btn" data-id="${tx.id}" title="Delete">Delete</button>`;
     transactionsList.appendChild(div);
   });
   document.querySelectorAll('.edit-transaction-btn').forEach(btn => {
@@ -367,6 +377,23 @@ function renderTransactionsSupabase(transactions) {
       if (confirm('Delete this transaction?')) deleteTransactionSupabase(id);
     });
   });
+}
+
+// Helper to load and render both categories and transactions
+async function loadAndRenderAll() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return;
+  const [{ data: categories, error: catError }, { data: transactions, error: txError }] = await Promise.all([
+    supabaseClient.from('categories').select('*').eq('user_id', user.id).eq('year', selectedYear).eq('month', selectedMonth),
+    supabaseClient.from('transactions').select('*').eq('user_id', user.id)
+  ]);
+  if (catError) { alert(catError.message); return; }
+  if (txError) { alert(txError.message); return; }
+  // Only show transactions for this period's categories
+  const catIds = categories.map(c => c.id);
+  const filteredTx = transactions.filter(tx => catIds.includes(tx.category_id));
+  renderCategoriesSupabase(categories, filteredTx);
+  renderTransactionsSupabase(filteredTx, categories);
 }
 
 // Modal logic for Supabase CRUD
@@ -407,7 +434,7 @@ addCategoryForm.addEventListener('submit', function(e) {
     if (editId) {
       updateCategorySupabase(editId, name, limits);
     } else {
-      addCategorySupabase(name, limits);
+      addCategorySupabase(name, limits, selectedYear, selectedMonth);
     }
     closeModal();
   }
@@ -483,8 +510,10 @@ async function populateCategoryDropdownSupabase() {
   if (!user) return;
   const { data, error } = await supabaseClient
     .from('categories')
-    .select('id, name')
-    .eq('user_id', user.id);
+    .select('id, name, year, month')
+    .eq('user_id', user.id)
+    .eq('year', selectedYear)
+    .eq('month', selectedMonth);
   transactionCategorySelect.innerHTML = '';
   if (error) return;
   data.forEach((cat) => {
@@ -622,3 +651,44 @@ function renderDeleteTransactions() {
     deleteTransactionsList.appendChild(row);
   });
 } 
+
+// --- Period Selection State ---
+const yearSelect = document.getElementById('year-select');
+const monthSelect = document.getElementById('month-select');
+const periodSelectors = document.querySelector('.period-selectors');
+let selectedYear = new Date().getFullYear();
+let selectedMonth = new Date().getMonth() + 1; // JS months are 0-based
+
+function populateYearMonthSelectors() {
+  // Years: current year +/- 3 years
+  const thisYear = new Date().getFullYear();
+  yearSelect.innerHTML = '';
+  for (let y = thisYear - 3; y <= thisYear + 3; y++) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    if (y === selectedYear) opt.selected = true;
+    yearSelect.appendChild(opt);
+  }
+  // Months: 1-12
+  monthSelect.innerHTML = '';
+  for (let m = 1; m <= 12; m++) {
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = new Date(2000, m - 1, 1).toLocaleString('default', { month: 'long' });
+    if (m === selectedMonth) opt.selected = true;
+    monthSelect.appendChild(opt);
+  }
+}
+
+// Listen for changes
+yearSelect.addEventListener('change', () => {
+  selectedYear = parseInt(yearSelect.value);
+  loadAndRenderAll();
+});
+monthSelect.addEventListener('change', () => {
+  selectedMonth = parseInt(monthSelect.value);
+  loadAndRenderAll();
+});
+
+populateYearMonthSelectors(); 
