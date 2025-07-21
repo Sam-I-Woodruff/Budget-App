@@ -115,10 +115,9 @@ loginForm.addEventListener('submit', async (e) => {
   try {
     const { error, data } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) {
-      alert(error.message);
+      showToast(error.message, 'error');
     } else {
-      alert('Logged in successfully!');
-      updateAuthUI(data.user);
+      showToast('Logged in successfully!', 'success');
     }
   } finally {
     loginForm.querySelector('button[type="submit"]').disabled = false;
@@ -134,9 +133,9 @@ signupForm.addEventListener('submit', async (e) => {
   try {
     const { error, data } = await supabaseClient.auth.signUp({ email, password });
     if (error) {
-      alert(error.message);
+      showToast(error.message, 'error');
     } else {
-      alert('Signup successful! Please check your email to confirm your account before logging in.');
+      showToast('Signup successful! Please check your email to confirm your account before logging in.', 'success');
       document.getElementById('login-email').value = email;
       document.getElementById('login-password').value = password;
       signupForm.reset();
@@ -179,7 +178,7 @@ async function loadCategories() {
     .select('*')
     .eq('user_id', user.id);
   if (error) {
-    alert(error.message);
+    showToast(error.message, 'error');
     return;
   }
   renderCategoriesSupabase(data);
@@ -195,13 +194,13 @@ async function addCategorySupabase(name, limits, year, month) {
       .from('categories')
       .insert([{ name, limits, spent: 0, user_id: user.id, year, month }]);
     if (error) {
-      alert(error.message);
+      showToast(error.message, 'error');
     } else {
       await loadAndRenderAll();
       closeModal();
     }
   } catch (err) {
-    alert('Unexpected error: ' + err.message);
+    showToast('Unexpected error: ' + err.message, 'error');
   }
 }
 
@@ -210,7 +209,7 @@ async function updateCategorySupabase(id, name, limits) {
     .from('categories')
     .update({ name, limits })
     .eq('id', id);
-  if (error) alert(error.message);
+  if (error) showToast(error.message, 'error');
   else loadAndRenderAll();
 }
 
@@ -219,7 +218,7 @@ async function deleteCategorySupabase(id) {
     .from('categories')
     .delete()
     .eq('id', id);
-  if (error) alert(error.message);
+  if (error) showToast(error.message, 'error');
   else loadAndRenderAll();
 }
 
@@ -232,7 +231,7 @@ async function loadTransactions() {
     .select('*')
     .eq('user_id', user.id);
   if (error) {
-    alert(error.message);
+    showToast(error.message, 'error');
     return;
   }
   renderTransactionsSupabase(data);
@@ -244,7 +243,7 @@ async function addTransactionSupabase(amount, date, category_id) {
   const { error } = await supabaseClient
     .from('transactions')
     .insert([{ amount, date, category_id, user_id: user.id }]);
-  if (error) alert(error.message);
+  if (error) showToast(error.message, 'error');
   else loadAndRenderAll();
 }
 
@@ -253,7 +252,7 @@ async function updateTransactionSupabase(id, amount, date, category_id) {
     .from('transactions')
     .update({ amount, date, category_id })
     .eq('id', id);
-  if (error) alert(error.message);
+  if (error) showToast(error.message, 'error');
   else loadAndRenderAll();
 }
 
@@ -262,7 +261,7 @@ async function deleteTransactionSupabase(id) {
     .from('transactions')
     .delete()
     .eq('id', id);
-  if (error) alert(error.message);
+  if (error) showToast(error.message, 'error');
   else loadAndRenderAll();
 }
 
@@ -362,7 +361,13 @@ function renderTransactionsSupabase(transactions, categories) {
     }
     const div = document.createElement('div');
     div.className = 'transaction-item';
-    div.innerHTML = `<span>${tx.date}</span> - <strong>${catName}</strong>: $${tx.amount.toFixed(2)} <button class="edit-transaction-btn" data-id="${tx.id}" title="Edit"><svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#a18aff' viewBox='0 0 16 16'><path d='M12.146.854a.5.5 0 0 1 .708 0l2.292 2.292a.5.5 0 0 1 0 .708l-9.193 9.193a.5.5 0 0 1-.168.11l-4 1.5a.5.5 0 0 1-.65-.65l1.5-4a.5.5 0 0 1 .11-.168l9.193-9.193zm.708-.708A1.5 1.5 0 0 0 12.146.146l-9.193 9.193a1.5 1.5 0 0 0-.329.494l-1.5 4a1.5 1.5 0 0 0 1.95 1.95l4-1.5a1.5 1.5 0 0 0 .494-.329l9.193-9.193a1.5 1.5 0 0 0 0-2.121l-2.292-2.292z'/></svg></button> <button class="delete-transaction-btn" data-id="${tx.id}" title="Delete">Delete</button>`;
+    div.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+        <span>${tx.date} - <strong>${catName}</strong>: $${tx.amount.toFixed(2)}</span>
+        <button class="edit-transaction-btn" data-id="${tx.id}" style="background: #e0d7ff; color: #7c5fff; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Edit</button>
+        <button class="delete-transaction-btn" data-id="${tx.id}" style="background: #ffe0c2; color: #ff7a2f; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Delete</button>
+      </div>
+    `;
     transactionsList.appendChild(div);
   });
   document.querySelectorAll('.edit-transaction-btn').forEach(btn => {
@@ -387,8 +392,8 @@ async function loadAndRenderAll() {
     supabaseClient.from('categories').select('*').eq('user_id', user.id).eq('year', selectedYear).eq('month', selectedMonth),
     supabaseClient.from('transactions').select('*').eq('user_id', user.id)
   ]);
-  if (catError) { alert(catError.message); return; }
-  if (txError) { alert(txError.message); return; }
+  if (catError) { showToast(catError.message, 'error'); return; }
+  if (txError) { showToast(txError.message, 'error'); return; }
   // Only show transactions for this period's categories
   const catIds = categories.map(c => c.id);
   const filteredTx = transactions.filter(tx => catIds.includes(tx.category_id));
@@ -400,7 +405,7 @@ async function loadAndRenderAll() {
 function openModalSupabase(editId = null) {
   if (editId) {
     supabaseClient.from('categories').select('*').eq('id', editId).single().then(({ data, error }) => {
-      if (error) return alert(error.message);
+      if (error) return showToast(error.message, 'error');
       document.getElementById('category-name').value = data.name;
       document.getElementById('category-limit').value = data.limits;
       addCategoryModal.querySelector('h3').textContent = 'Edit Category';
@@ -454,7 +459,7 @@ function openTransactionModalSupabase(editId = null) {
   populateCategoryDropdownSupabase().then(() => {
     if (editId) {
       supabaseClient.from('transactions').select('*').eq('id', editId).single().then(({ data, error }) => {
-        if (error) return alert(error.message);
+        if (error) return showToast(error.message, 'error');
         document.getElementById('transaction-amount').value = data.amount;
         document.getElementById('transaction-date').value = data.date;
         document.getElementById('transaction-category').value = data.category_id;
@@ -515,7 +520,7 @@ async function populateCategoryDropdownSupabase() {
     .eq('year', selectedYear)
     .eq('month', selectedMonth);
   transactionCategorySelect.innerHTML = '';
-  if (error) return;
+  if (error) return showToast(error.message, 'error');
   data.forEach((cat) => {
     const option = document.createElement('option');
     option.value = cat.id;
@@ -694,3 +699,20 @@ monthSelect.addEventListener('change', () => {
 });
 
 populateYearMonthSelectors(); 
+
+// Toast notification function
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + (type === 'error' ? 'error' : 'success');
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.pointerEvents = 'none';
+    setTimeout(() => {
+      toast.remove();
+    }, 400);
+  }, 3000);
+} 
