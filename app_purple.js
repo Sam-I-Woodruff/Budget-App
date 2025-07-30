@@ -315,10 +315,16 @@ function renderCategoriesSupabase(categories, transactions) {
     div.className = 'category-item';
     div.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
-        <span><strong>${cat.name}</strong> - $${spent.toFixed(2)} / $${cat.limits.toFixed(2)}</span>
-        <span style="color: ${isOver ? '#ff7a2f' : '#4be18a'}; font-weight: bold;">$${displayAmount} ${label}</span>
-        <button class="edit-category-btn" data-id="${cat.id}" style="background: #e0d7ff; color: #7c5fff; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Edit</button>
-        <button class="delete-category-btn" data-id="${cat.id}" style="background: #ffe0c2; color: #ff7a2f; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Delete</button>
+        <span style="flex: 1 1 0; min-width: 0;"><strong>${cat.name}</strong> - $${spent.toFixed(2)} / $${cat.limits.toFixed(2)}</span>
+        <span style="color: ${isOver ? '#ff7a2f' : '#4be18a'}; font-weight: bold; margin-right: 1rem;">$${displayAmount} ${label}</span>
+        <span style="display: flex; gap: 0.2rem; justify-content: flex-end; align-items: center;">
+          <button class="edit-category-btn" data-id="${cat.id}" title="Edit" style="background: none; border: none; border-radius: 1rem; padding: 0.2rem 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#7c5fff' viewBox='0 0 16 16'><path d='M12.146 2.354l1.5 1.5-9.193 9.193-1.5-1.5L12.146 2.354zm.708-.708a1 1 0 0 1 1.415 1.415l-9.193 9.193a1 1 0 0 1-.494.263l-2 0.5a0.5 0 0 1-.65-.65l0.5-2a1 1 0 0 1 .263-.494l9.193-9.193z'/></svg>
+          </button>
+          <button class="delete-category-btn" data-id="${cat.id}" title="Delete" style="background: none; border: none; border-radius: 1rem; padding: 0.2rem 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#ff7a2f' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6zm-7-2A1.5 1.5 0 0 1 5.5 3h5A1.5 1.5 0 0 1 12 4.5V5h3.5a.5.5 0 0 1 0 1h-1.027l-.427 9.447A2 2 0 0 1 12.05 17H3.95a2 2 0 0 1-1.996-1.553L1.527 6H.5a.5.5 0 0 1 0-1H4v-.5zM5.5 4a.5.5 0 0 0-.5.5V5h6v-.5a.5.5 0 0 0-.5-.5h-5zM2.522 6l.427 9.447A1 1 0 0 0 3.95 16h8.1a1 1 0 0 0 .999-.553L13.478 6H2.522z'/></svg>
+          </button>
+        </span>
       </div>
     `;
     // Progress bar
@@ -363,9 +369,15 @@ function renderTransactionsSupabase(transactions, categories) {
     div.className = 'transaction-item';
     div.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
-        <span>${tx.date} - <strong>${catName}</strong>: $${tx.amount.toFixed(2)}</span>
-        <button class="edit-transaction-btn" data-id="${tx.id}" style="background: #e0d7ff; color: #7c5fff; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Edit</button>
-        <button class="delete-transaction-btn" data-id="${tx.id}" style="background: #ffe0c2; color: #ff7a2f; border-radius: 1rem; font-size: 0.9rem; padding: 0.3rem 0.9rem; margin-left: 0.5rem;">Delete</button>
+        <span style="flex: 1 1 0; min-width: 0;">${tx.date} - <strong>${catName}</strong>: $${tx.amount.toFixed(2)}</span>
+        <span style="display: flex; gap: 0.2rem; justify-content: flex-end; align-items: center;">
+          <button class="edit-transaction-btn" data-id="${tx.id}" title="Edit" style="background: none; border: none; border-radius: 1rem; padding: 0.2rem 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#7c5fff' viewBox='0 0 16 16'><path d='M12.146 2.354l1.5 1.5-9.193 9.193-1.5-1.5L12.146 2.354zm.708-.708a1 1 0 0 1 1.415 1.415l-9.193 9.193a1 1 0 0 1-.494.263l-2 0.5a0.5 0 0 1-.65-.65l0.5-2a1 1 0 0 1 .263-.494l9.193-9.193z'/></svg>
+          </button>
+          <button class="delete-transaction-btn" data-id="${tx.id}" title="Delete" style="background: none; border: none; border-radius: 1rem; padding: 0.2rem 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='#ff7a2f' viewBox='0 0 16 16'><path d='M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5.5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6zm3 .5a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6zm-7-2A1.5 1.5 0 0 1 5.5 3h5A1.5 1.5 0 0 1 12 4.5V5h3.5a.5.5 0 0 1 0 1h-1.027l-.427 9.447A2 2 0 0 1 12.05 17H3.95a2 2 0 0 1-1.996-1.553L1.527 6H.5a.5.5 0 0 1 0-1H4v-.5zM5.5 4a.5.5 0 0 0-.5.5V5h6v-.5a.5.5 0 0 0-.5-.5h-5zM2.522 6l.427 9.447A1 1 0 0 0 3.95 16h8.1a1 1 0 0 0 .999-.553L13.478 6H2.522z'/></svg>
+          </button>
+        </span>
       </div>
     `;
     transactionsList.appendChild(div);
